@@ -18,7 +18,7 @@
         </div>
       </div>
     </div>
-    <div class="container-currencies">
+    <div class="container-currencies" :class="[currencies.length > 0 ? 'container-currencies-with-card' : '']">
       <div v-for="currency in currencies">
         <CurrencyComponent
           :number= currency.number
@@ -102,7 +102,7 @@ export default {
       const alertPlaceholder = document.getElementById('alert-message-container')
       const wrapper = document.createElement('div')
       wrapper.innerHTML = [
-        `<div class="alert alert-success alert-dismissible" role="alert" style="background-color: #1987545c;">`,
+        `<div class="alert alert-success alert-dismissible" role="alert" style="background-color: white;">`,
         `   <div>${message}</div>`,
         '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
         '</div>'
@@ -127,6 +127,12 @@ export default {
 </script>
 
 <style>
+  .home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
   h4 {
     margin: 30px;
     font-weight: 400;
@@ -136,6 +142,7 @@ export default {
     border: none;
     border-bottom: 2px solid;
     text-align: center;
+    background-color: transparent;
     text-transform: uppercase;
   }
 
@@ -168,6 +175,13 @@ export default {
     align-items: center;
   }
 
+  .container-currencies-with-card {
+    border: 2px solid rgb(182, 182, 182);
+    border-radius: 10px;
+    width: auto;
+    margin: 10px;
+  }
+
   .search-button {
     margin: 20px;
     background-color: #FF8400;
@@ -179,7 +193,6 @@ export default {
   }
 
   .card-currey-selected {
-    background-color: transparent;
     animation: card-currey-selected-animation 1s alternate;
   }
 

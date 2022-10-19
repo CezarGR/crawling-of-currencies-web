@@ -3,6 +3,13 @@
 </template>
 
 <style>
+body {
+  background-image: url('./assets/background.svg');
+  height: 100vh;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
 #app {
   font-family: 'Kanit', sans-serif;
   text-align: center;
