@@ -21,7 +21,7 @@
     <div class="container-currencies">
       <div v-for="currency in currencies">
         <CurrencyComponent
-          :numero= currency.number
+          :number= currency.number
           :currencyName= currency.name
           :code= currency.code 
           :symbol= currency.symbol 
@@ -29,6 +29,7 @@
         />
       </div>
     </div>
+    <div id="alert-message-container"></div>
   </div>
 </template>
 
@@ -50,26 +51,76 @@ export default {
     CurrencyComponent
   },
   methods: {
-    setItems(request) {
+    addCurrencies(currencies) {
+      currencies.forEach(currency => {
+        this.currencies.push(currency);
+      });
+    },
+    requestSearchCurrency(values) {
+        const request = new XMLHttpRequest();
+        let body = this.searchBy == 'code' ? {"codes": values} : {"numbers": values}
+        request.open("POST", "http://localhost:8083/api/v2/currencies/search");
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.addEventListener("load", this.responseSearchCurrency);
+        request.send(JSON.stringify(body));
+    },
+    responseSearchCurrency(request) {
       request = request.currentTarget
       if (request.status == 200) {
-          let response = JSON.parse(request.responseText);
-          let currencies = Object.values(response.data)
-          currencies.forEach(item => {
-            this.currencies.push(item);
-          });
+          this.addCurrencies(
+            Object.values(JSON.parse(request.responseText).data)
+          );
+          this.alertSuccess(`Moedas adicionadas com sucesso`);
       } else {
-          alert('ERROR');
+          let message = JSON.parse(request.responseText).message
+          this.alertErro(message ?? 'Erro ao utilizar serviço de rastreamento')
       }
     },
     searchCurrency() {
-      let request = new XMLHttpRequest();
       let valuesArray = this.values.toUpperCase().replace(' ', '').split(',');
-      let body = this.searchBy == 'code' ? {"codes": valuesArray} : {"numbers": valuesArray}
-      request.open("POST", "http://localhost:8083/api/v2/currencies/search");
-      request.setRequestHeader('Content-Type', 'application/json');
-      request.addEventListener("load", this.setItems);
-      request.send(JSON.stringify(body));
+      let searchBy = this.searchBy;
+
+      let duplicateCurrencies = this.currencies.filter(function (item) {
+        return valuesArray.includes(item.code) || valuesArray.includes(item.number);
+      })
+
+      duplicateCurrencies.forEach(function (item) {
+        let cardCurrency = document.getElementById(`card-currency-${item.number}`);
+        setTimeout(() => cardCurrency.classList.add('card-currey-selected'), 100)
+        cardCurrency.classList.remove('card-currey-selected');
+
+        valuesArray = valuesArray.filter(function (value) {
+          return (searchBy === 'number' && value != item.number) || (searchBy === 'code' && value != item.code);
+        });
+      });
+
+      if (valuesArray.length > 0) {
+        this.requestSearchCurrency(valuesArray);
+      }
+    },
+    alertSuccess(message) {
+      const alertPlaceholder = document.getElementById('alert-message-container')
+      const wrapper = document.createElement('div')
+      wrapper.innerHTML = [
+        `<div class="alert alert-success alert-dismissible" role="alert" style="background-color: #1987545c;">`,
+        `   <div>${message}</div>`,
+        '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+        '</div>'
+      ].join('')
+
+      alertPlaceholder.append(wrapper)
+    },
+    alertErro(message) {
+      const alertPlaceholder = document.getElementById('alert-message-container')
+      const wrapper = document.createElement('div')
+      wrapper.innerHTML = [
+        `<div class="alert alert-error alert-dismissible" role="alert" style="background-color: #ff000070;">`,
+        `   <div>${message}</div>`,
+        '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+        '</div>'
+      ].join('')
+
+      alertPlaceholder.append(wrapper)
     }
   }
 }
@@ -125,5 +176,41 @@ export default {
 
   .search-button:hover {
     background-color: #a75703;
+  }
+
+  .card-currey-selected {
+    background-color: transparent;
+    animation: card-currey-selected-animation 1s alternate;
+  }
+
+  @keyframes card-currey-selected-animation {
+    0% {
+      background-color: #ff84000e;
+    }
+    25% {
+      background-color: #ff84001f
+    }
+    50% {
+      background-color: #ff840041;
+    }
+    75% {
+      background-color: #ff84001f;
+    }
+    100%{
+      background-color: #ff84000e;
+    }
+  }
+
+  #alert-message-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  #alert-message-container > div {
+    width: 50%;
   }
 </style>
